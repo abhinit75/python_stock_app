@@ -61,5 +61,66 @@ app.layout = html.Div(children=[
     )
 ])
 
+# Prepare data for Prophet
+prophet_data = data[['Close']].reset_index()
+prophet_data.columns = ['ds', 'y']
+
+# Instantiate a new Prophet object
+m = Prophet(daily_seasonality=True)
+
+# Fit the Prophet model on our data
+m.fit(prophet_data)
+
+# Create a dataframe for future predictions
+future = m.make_future_dataframe(periods=60)
+
+# Use the model to make predictions
+forecast = m.predict(future)
+
+# Plotly figure setup
+fig = go.Figure()
+
+# Add actual data to the plot
+fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Actual'))
+
+# Add forecast data to the plot
+fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Forecast'))
+
+# Add confidence interval
+fig.add_trace(go.Scatter(
+    name='Upper Bound',
+    x=forecast['ds'],
+    y=forecast['yhat_upper'],
+    mode='lines',
+    marker=dict(color="#444"),
+    line=dict(width=0),
+    showlegend=False))
+fig.add_trace(go.Scatter(
+    name='Lower Bound',
+    x=forecast['ds'],
+    y=forecast['yhat_lower'],
+    marker=dict(color="#444"),
+    line=dict(width=0),
+    mode='lines',
+    fillcolor='rgba(68, 68, 68, 0.3)',
+    fill='tonexty',
+    showlegend=False))
+
+# Set plot title and labels
+fig.update_layout(
+    title_text='AAPL Stock Price Forecast',
+    yaxis_title='Stock Price',
+    xaxis_title='Date',
+    hovermode='x'
+)
+
+# Create Dash application
+app = dash.Dash()
+
+# Define Dash application layout
+app.layout = html.Div([
+    dcc.Graph(figure=fig)
+])
+
 if __name__ == '__main__':
     app.run_server(debug=True)
