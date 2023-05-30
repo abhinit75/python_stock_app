@@ -1,12 +1,17 @@
 import dash
+import time
 import pandas as pd
 import yfinance as yf
 from prophet import Prophet
+from dotenv import load_dotenv
 import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+
+# Load the .env file
+load_dotenv('/Users/abhi/Desktop/projects/python_stock_project/.env')
 
 # Step 1: Gather Data
 
@@ -38,28 +43,8 @@ model.fit(X_train, y_train)
 # Now we can make predictions on the test set
 predictions = model.predict(X_test)
 
-
 # Step 4: Build the dashboard
 app = dash.Dash(__name__)
-
-app.layout = html.Div(children=[
-    html.H1(children='Stock Price Prediction'),
-
-    html.Div(children='''AAPL stock price prediction.'''),
-
-    dcc.Graph(
-        id='example-graph',
-        figure={
-            'data': [
-                {'x': data.index, 'y': data['Close'], 'type': 'line', 'name': 'Close Price'},
-                {'x': [data.index[-1] + pd.DateOffset(1)], 'y': [model.predict([[data['Rolling'].iloc[-1]]])], 'type': 'marker', 'name': 'Predicted Next Close Price'}
-            ],
-            'layout': {
-                'title': 'Close Price Over Time'
-            }
-        }
-    )
-])
 
 # Prepare data for Prophet
 prophet_data = data[['Close']].reset_index()
@@ -114,12 +99,25 @@ fig.update_layout(
     hovermode='x'
 )
 
-# Create Dash application
-app = dash.Dash()
+# Step 5: Generate Data Summary
+
+def generate_summary(data, prediction):
+    message = f"""
+    The stock had a closing price of ${round(data['Close'].iloc[-1], 2)} today. 
+    The rolling average over the past 5 days was ${round(data['Rolling'].iloc[-1], 2)}. 
+    The predicted closing price for tomorrow is ${round(prediction, 2)}.
+    """
+    return message
+
+# Generate the summary after making the prediction
+summary = generate_summary(data, model.predict([[data['Rolling'].iloc[-1]]])[0])
 
 # Define Dash application layout
 app.layout = html.Div([
-    dcc.Graph(figure=fig)
+    dcc.Graph(figure=fig),
+    html.Div(children=[
+        html.P(id='summary', children=[generate_summary(data, model.predict([[data['Rolling'].iloc[-1]]])[0])])
+    ], style={'textAlign': 'center'})
 ])
 
 if __name__ == '__main__':
