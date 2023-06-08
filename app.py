@@ -2,7 +2,6 @@ import os
 import dash
 from dash.dependencies import Input, Output, State
 from datetime import datetime
-import openai
 import pandas as pd
 import yfinance as yf
 from prophet import Prophet
