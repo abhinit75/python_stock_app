@@ -15,10 +15,6 @@ from sklearn.model_selection import train_test_split
 # Load the .env file
 load_dotenv('/Users/abhi/Desktop/projects/python_stock_project/.env')
 
-# Access the API key
-api_key = os.getenv("OPENAPI_KEY")
-openai.api_key = api_key
-
 # Step 1: Gather Data
 
 
